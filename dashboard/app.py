@@ -276,3 +276,133 @@ try:
 except requests.exceptions.RequestException as e:
     st.error(f"Could not retrieve retraining information: {e}")
 
+
+
+# --------------------------------------------------
+# BULK TRAINING DATA UPLOAD
+# --------------------------------------------------
+
+st.divider()
+st.header("📦 Bulk Training Data Upload")
+st.caption(
+    "Upload a ZIP archive containing labelled plant leaf images "
+    "to prepare new data for model retraining."
+)
+
+st.info(
+    "ZIP structure required: one folder per disease class, "
+    "with the class folders directly inside the ZIP. "
+    "Each of the 27 classes needs at least 10 images."
+)
+
+training_zip = st.file_uploader(
+    "Upload labelled training images (ZIP)",
+    type=["zip"],
+    key="training_zip_upload"
+)
+
+if training_zip is not None:
+    st.write("Selected archive:", training_zip.name)
+    st.write(
+        f"Archive size: {training_zip.size / (1024 * 1024):.2f} MB"
+    )
+
+    if st.button("Upload Training Data", type="primary"):
+        with st.spinner("Validating and uploading training images..."):
+            try:
+                response = requests.post(
+                    f"{API_URL}/retraining/upload",
+                    files={
+                        "file": (
+                            training_zip.name,
+                            training_zip.getvalue(),
+                            "application/zip"
+                        )
+                    },
+                    timeout=300
+                )
+
+                if response.status_code == 200:
+                    upload_result = response.json()
+                    st.session_state["training_upload_result"] = upload_result
+
+                    st.success("Training data uploaded successfully!")
+                    st.json(upload_result)
+
+                else:
+                    st.error(
+                        f"Upload failed ({response.status_code}): "
+                        f"{response.text}"
+                    )
+
+            except requests.exceptions.RequestException as e:
+                st.error(f"Upload request failed: {e}")
+
+
+# --------------------------------------------------
+# ACTUAL MODEL RETRAINING
+# --------------------------------------------------
+
+st.divider()
+st.header("🧠 Actual Model Retraining")
+st.caption(
+    "Train a candidate model using uploaded images and compare it "
+    "against the currently deployed model."
+)
+
+st.warning(
+    "Retraining may take several minutes. The existing production "
+    "model is retained if the candidate does not perform at least "
+    "as well as the current model."
+)
+
+if st.button("🚀 Start Model Retraining", type="primary"):
+    with st.spinner(
+        "Retraining in progress. Please wait and do not stop the API..."
+    ):
+        try:
+            response = requests.post(
+                f"{API_URL}/retraining/run",
+                timeout=1800
+            )
+
+            if response.status_code == 200:
+                retraining_result = response.json()
+                st.session_state["retraining_result"] = retraining_result
+
+                status = retraining_result.get("status", "completed")
+
+                if status == "accepted":
+                    st.success(
+                        "Retraining completed. The candidate model was accepted."
+                    )
+                elif status == "rejected":
+                    st.warning(
+                        "Retraining completed, but the candidate model "
+                        "was not accepted. The existing model was retained."
+                    )
+                else:
+                    st.success("Retraining endpoint completed successfully.")
+
+                st.json(retraining_result)
+
+            else:
+                st.error(
+                    f"Retraining could not start "
+                    f"({response.status_code}): {response.text}"
+                )
+
+        except requests.exceptions.Timeout:
+            st.error(
+                "The retraining request timed out. "
+                "Check the API process before trying again."
+            )
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Retraining request failed: {e}")
+
+
+if "retraining_result" in st.session_state:
+    st.subheader("Latest Retraining Result")
+    st.json(st.session_state["retraining_result"])
+

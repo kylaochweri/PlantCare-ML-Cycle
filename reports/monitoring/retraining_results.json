@@ -1,0 +1,31 @@
+{
+    "timestamp": "2026-11-26T21:15:26.859789+00:00",
+    "status": "accepted",
+    "total_images": 540,
+    "number_of_classes": 27,
+    "baseline_accuracy": 0.9907407164573669,
+    "candidate_accuracy": 0.9907407164573669,
+    "accuracy_improvement": 0.0,
+    "epochs": 2,
+    "candidate_model": "/content/PlantCare-ML-Cycle/models/candidates/plantcare_candidate_20261126_211404.keras",
+    "backup_model": "/content/PlantCare-ML-Cycle/models/backups/plantcare_backup_20261126_211404.keras",
+    "model_replaced": true,
+    "training_history": {
+        "accuracy": [
+            0.9537037014961243,
+            0.9490740895271301
+        ],
+        "loss": [
+            0.1279507726430893,
+            0.13017068803310394
+        ],
+        "val_accuracy": [
+            0.9907407164573669,
+            0.9907407164573669
+        ],
+        "val_loss": [
+            0.04330539330840111,
+            0.04300561547279358
+        ]
+    }
+}

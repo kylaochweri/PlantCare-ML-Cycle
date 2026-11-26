@@ -3,8 +3,10 @@ import csv
 import io
 import json
 import os
+import shutil
 import time
 import uuid
+import zipfile
 from datetime import datetime, timezone
 
 import numpy as np
@@ -472,3 +474,419 @@ def request_retraining():
         "eligibility": eligibility
     }
 
+
+
+
+
+# --------------------------------------------------
+# BULK TRAINING DATA UPLOAD
+# --------------------------------------------------
+
+UPLOAD_DIR = os.path.join(
+    PROJECT_DIR, "data", "incoming_training"
+)
+
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+MAX_ZIP_SIZE = 200 * 1024 * 1024
+MAX_TOTAL_IMAGE_SIZE = 500 * 1024 * 1024
+MAX_IMAGE_COUNT = 5000
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+
+@app.post("/retraining/upload")
+async def upload_training_data(file: UploadFile = File(...)):
+
+    archive_bytes = await file.read(MAX_ZIP_SIZE + 1)
+
+    if len(archive_bytes) > MAX_ZIP_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail="ZIP archive exceeds the 200 MB limit."
+        )
+
+    if not archive_bytes:
+        raise HTTPException(
+            status_code=400,
+            detail="The uploaded ZIP archive is empty."
+        )
+
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(archive_bytes))
+    except zipfile.BadZipFile:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid ZIP archive."
+        )
+
+    validated_images = []
+    total_size = 0
+
+    try:
+        for item in archive.infolist():
+
+            if item.is_dir():
+                continue
+
+            # Reject unsafe or unexpected archive paths
+            archive_path = item.filename.replace("\\", "/")
+            parts = archive_path.split("/")
+
+            if (
+                archive_path.startswith("/")
+                or len(parts) != 2
+                or any(part in ("", ".", "..") for part in parts)
+            ):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid ZIP path: {item.filename}"
+                )
+
+            class_name, filename = parts
+
+            if class_name not in class_to_index:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown class folder: {class_name}"
+                )
+
+            extension = os.path.splitext(filename)[1].lower()
+
+            if extension not in ALLOWED_IMAGE_EXTENSIONS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported image file: {filename}"
+                )
+
+            if item.file_size <= 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Empty image file: {filename}"
+                )
+
+            total_size += item.file_size
+
+            if total_size > MAX_TOTAL_IMAGE_SIZE:
+                raise HTTPException(
+                    status_code=413,
+                    detail="Uncompressed images exceed the 500 MB limit."
+                )
+
+            image_bytes = archive.read(item)
+
+            try:
+                with Image.open(io.BytesIO(image_bytes)) as image:
+                    image.verify()
+            except Exception:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid image: {filename}"
+                )
+
+            validated_images.append(
+                (class_name, extension, image_bytes)
+            )
+
+            if len(validated_images) > MAX_IMAGE_COUNT:
+                raise HTTPException(
+                    status_code=413,
+                    detail="Maximum of 5000 images per upload exceeded."
+                )
+
+    finally:
+        archive.close()
+
+    if not validated_images:
+        raise HTTPException(
+            status_code=400,
+            detail="No valid labelled images were found in the ZIP."
+        )
+
+    # Save only after the entire archive has passed validation
+    class_counts = {}
+
+    for class_name, extension, image_bytes in validated_images:
+
+        class_directory = os.path.join(
+            UPLOAD_DIR, class_name
+        )
+        os.makedirs(class_directory, exist_ok=True)
+
+        saved_name = f"{uuid.uuid4().hex}{extension}"
+
+        with open(
+            os.path.join(class_directory, saved_name), "wb"
+        ) as output_file:
+            output_file.write(image_bytes)
+
+        class_counts[class_name] = (
+            class_counts.get(class_name, 0) + 1
+        )
+
+    return {
+        "message": "Training images uploaded and validated successfully.",
+        "uploaded_images": len(validated_images),
+        "classes_received": len(class_counts),
+        "class_distribution": class_counts,
+        "upload_directory": UPLOAD_DIR
+    }
+
+
+
+# ACTUAL MODEL RETRAINING
+
+
+# --------------------------------------------------
+# ACTUAL MODEL RETRAINING
+# --------------------------------------------------
+
+@app.post("/retraining/run")
+def run_model_retraining():
+
+    global model
+
+    from datetime import datetime, timezone
+
+    class_names = [
+        name for name, index in sorted(
+            class_to_index.items(),
+            key=lambda item: int(item[1])
+        )
+    ]
+
+    # Count images in every class
+    class_counts = {}
+
+    for class_name in class_names:
+        class_directory = os.path.join(UPLOAD_DIR, class_name)
+
+        if not os.path.isdir(class_directory):
+            class_counts[class_name] = 0
+            continue
+
+        class_counts[class_name] = sum(
+            1 for filename in os.listdir(class_directory)
+            if os.path.splitext(filename)[1].lower()
+            in ALLOWED_IMAGE_EXTENSIONS
+        )
+
+    missing_classes = [
+        name for name, count in class_counts.items()
+        if count < 10
+    ]
+
+    if missing_classes:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": (
+                    "Insufficient training data. "
+                    "Every class requires at least 10 images."
+                ),
+                "classes_below_minimum": missing_classes,
+                "minimum_per_class": 10,
+                "class_distribution": class_counts
+            }
+        )
+
+    total_images = sum(class_counts.values())
+
+    # Create a genuinely stratified 80/20 dataset split
+    from sklearn.model_selection import train_test_split
+
+    image_paths = []
+    image_labels = []
+
+    for class_index, class_name in enumerate(class_names):
+        class_directory = os.path.join(UPLOAD_DIR, class_name)
+
+        for filename in os.listdir(class_directory):
+            if os.path.splitext(filename)[1].lower() in ALLOWED_IMAGE_EXTENSIONS:
+                image_paths.append(
+                    os.path.join(class_directory, filename)
+                )
+                image_labels.append(class_index)
+
+    train_paths, val_paths, train_labels, val_labels = train_test_split(
+        image_paths,
+        image_labels,
+        test_size=0.2,
+        random_state=42,
+        stratify=image_labels
+    )
+
+    def load_training_image(path, label):
+        image_bytes = tf.io.read_file(path)
+        image = tf.io.decode_image(
+            image_bytes,
+            channels=3,
+            expand_animations=False
+        )
+        image.set_shape([None, None, 3])
+        image = tf.image.resize(image, IMAGE_SIZE)
+        image = tf.cast(image, tf.float32) / 255.0
+        return image, label
+
+    train_ds = tf.data.Dataset.from_tensor_slices(
+        (train_paths, train_labels)
+    )
+
+    train_ds = (
+        train_ds
+        .shuffle(len(train_paths), seed=42)
+        .map(load_training_image, num_parallel_calls=tf.data.AUTOTUNE)
+        .batch(16)
+        .prefetch(tf.data.AUTOTUNE)
+    )
+
+    val_ds = tf.data.Dataset.from_tensor_slices(
+        (val_paths, val_labels)
+    )
+
+    val_ds = (
+        val_ds
+        .map(load_training_image, num_parallel_calls=tf.data.AUTOTUNE)
+        .batch(16)
+        .prefetch(tf.data.AUTOTUNE)
+    )
+
+    # Prepare backup and candidate directories
+    backup_dir = os.path.join(
+        PROJECT_DIR, "models", "backups"
+    )
+
+    candidate_dir = os.path.join(
+        PROJECT_DIR, "models", "candidates"
+    )
+
+    os.makedirs(backup_dir, exist_ok=True)
+    os.makedirs(candidate_dir, exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).strftime(
+        "%Y%m%d_%H%M%S"
+    )
+
+    candidate_path = os.path.join(
+        candidate_dir,
+        f"plantcare_candidate_{timestamp}.keras"
+    )
+
+    backup_path = os.path.join(
+        backup_dir,
+        f"plantcare_backup_{timestamp}.keras"
+    )
+
+    # Evaluate the existing production model
+    try:
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(
+                learning_rate=0.00001
+            ),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"]
+        )
+
+        baseline_metrics = model.evaluate(
+            val_ds,
+            verbose=0,
+            return_dict=True
+        )
+
+        baseline_accuracy = float(
+            baseline_metrics["accuracy"]
+        )
+
+        # Load a separate copy of the original model
+        candidate = tf.keras.models.load_model(
+            MODEL_PATH,
+            compile=False
+        )
+
+        candidate.compile(
+            optimizer=tf.keras.optimizers.Adam(
+                learning_rate=0.00001
+            ),
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"]
+        )
+
+        # Train only the classification head
+        history = candidate.fit(
+            train_ds,
+            validation_data=val_ds,
+            epochs=2,
+            verbose=1
+        )
+
+        candidate_metrics = candidate.evaluate(
+            val_ds,
+            verbose=0,
+            return_dict=True
+        )
+
+        candidate_accuracy = float(
+            candidate_metrics["accuracy"]
+        )
+
+        # Save the candidate even if it is rejected
+        candidate.save(candidate_path)
+
+        accepted = candidate_accuracy >= baseline_accuracy
+
+        if accepted:
+            # Preserve the original production model
+            shutil.copy2(MODEL_PATH, backup_path)
+
+            # Prepare a replacement beside the production model
+            deployment_temp = MODEL_PATH + ".new.keras"
+
+            shutil.copy2(candidate_path, deployment_temp)
+
+            # Replace the production checkpoint
+            os.replace(deployment_temp, MODEL_PATH)
+
+            # Update the model used by the prediction endpoint
+            model = candidate
+
+        result = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "accepted" if accepted else "rejected",
+            "total_images": total_images,
+            "number_of_classes": len(class_names),
+            "baseline_accuracy": baseline_accuracy,
+            "candidate_accuracy": candidate_accuracy,
+            "accuracy_improvement": (
+                candidate_accuracy - baseline_accuracy
+            ),
+            "epochs": 2,
+            "candidate_model": candidate_path,
+            "backup_model": backup_path if accepted else None,
+            "model_replaced": accepted,
+            "training_history": history.history
+        }
+
+        result_path = os.path.join(
+            MONITORING_DIR,
+            "retraining_results.json"
+        )
+
+        with open(result_path, "w", encoding="utf-8") as file:
+            json.dump(result, file, indent=4)
+
+        return {
+            "message": (
+                "Candidate model accepted and production model updated."
+                if accepted
+                else "Candidate rejected. Original production model preserved."
+            ),
+            "result": result
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Retraining failed: {str(error)}"
+        )

@@ -36,3 +36,9 @@ Thumbs.db
 # IDE settings
 .vscode/
 .idea/
+
+
+# PlantCare uploaded training data and retraining artefacts
+data/incoming_training/
+models/backups/
+models/candidates/
