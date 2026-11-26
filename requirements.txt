@@ -1,0 +1,11 @@
+tensorflow==2.21.0
+numpy
+Pillow
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+python-multipart
+pydantic
+streamlit==1.67.0
+pandas
+requests
+plotly==5.24.1

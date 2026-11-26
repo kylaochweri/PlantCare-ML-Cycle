@@ -1,0 +1,119 @@
+Actual Class,Predicted As,Incorrect Predictions
+Tomato___Early Blight,Tomato___Late Blight,56
+Corn___Gray Leaf Spot,Corn___Northern Leaf Blight,38
+Corn___Northern Leaf Blight,Corn___Gray Leaf Spot,26
+Tomato___Early Blight,Tomato___Healthy,20
+Tomato___Early Blight,Tomato___Bacterial Spot,19
+Grape___Esca,Grape___Black Rot,15
+Apple___Healthy,Tomato___Healthy,12
+Pepper___Bacterial Spot,Pepper___Healthy,12
+Grape___Black Rot,Grape___Esca,11
+Cherry___Healthy,Tomato___Healthy,10
+Potato___Late Blight,Tomato___Late Blight,10
+Apple___Apple Scab,Peach___Bacterial Spot,8
+Tomato___Late Blight,Tomato___Healthy,8
+Tomato___Late Blight,Tomato___Early Blight,8
+Cherry___Healthy,Pepper___Healthy,8
+Apple___Cedar Apple Rust,Tomato___Bacterial Spot,7
+Apple___Cedar Apple Rust,Peach___Bacterial Spot,7
+Potato___Late Blight,Potato___Healthy,7
+Tomato___Early Blight,Potato___Late Blight,7
+Apple___Apple Scab,Tomato___Healthy,7
+Potato___Healthy,Pepper___Healthy,6
+Apple___Apple Scab,Tomato___Early Blight,5
+Grape___Healthy,Tomato___Healthy,5
+Tomato___Late Blight,Tomato___Bacterial Spot,5
+Apple___Apple Scab,Tomato___Bacterial Spot,5
+Apple___Apple Scab,Tomato___Late Blight,5
+Apple___Apple Scab,Apple___Black Rot,5
+Apple___Apple Scab,Strawberry___Healthy,4
+Cherry___Powdery Mildew,Pepper___Healthy,4
+Apple___Healthy,Peach___Healthy,4
+Potato___Early Blight,Potato___Late Blight,4
+Pepper___Bacterial Spot,Tomato___Late Blight,4
+Tomato___Late Blight,Potato___Late Blight,4
+Pepper___Healthy,Pepper___Bacterial Spot,4
+Potato___Healthy,Potato___Late Blight,4
+Cherry___Powdery Mildew,Tomato___Healthy,3
+Pepper___Bacterial Spot,Tomato___Early Blight,3
+Potato___Early Blight,Tomato___Early Blight,3
+Apple___Cedar Apple Rust,Apple___Apple Scab,3
+Apple___Apple Scab,Potato___Late Blight,3
+Apple___Apple Scab,Apple___Healthy,3
+Corn___Northern Leaf Blight,Corn___Common Rust,3
+Apple___Cedar Apple Rust,Tomato___Late Blight,2
+Apple___Cedar Apple Rust,Tomato___Healthy,2
+Apple___Healthy,Peach___Bacterial Spot,2
+Cherry___Powdery Mildew,Strawberry___Healthy,2
+Apple___Cedar Apple Rust,Tomato___Early Blight,2
+Apple___Healthy,Potato___Healthy,2
+Cherry___Powdery Mildew,Tomato___Early Blight,2
+Apple___Apple Scab,Cherry___Powdery Mildew,2
+Apple___Black Rot,Strawberry___Healthy,2
+Apple___Black Rot,Pepper___Bacterial Spot,2
+Apple___Apple Scab,Pepper___Bacterial Spot,2
+Apple___Black Rot,Grape___Black Rot,2
+Tomato___Bacterial Spot,Tomato___Early Blight,2
+Tomato___Early Blight,Pepper___Bacterial Spot,2
+Tomato___Healthy,Tomato___Late Blight,2
+Strawberry___Leaf Scorch,Tomato___Late Blight,2
+Grape___Leaf Blight,Potato___Early Blight,2
+Corn___Healthy,Corn___Common Rust,2
+Pepper___Healthy,Peach___Healthy,2
+Corn___Gray Leaf Spot,Corn___Common Rust,2
+Apple___Black Rot,Peach___Bacterial Spot,2
+Strawberry___Healthy,Tomato___Healthy,2
+Potato___Healthy,Tomato___Healthy,2
+Pepper___Healthy,Potato___Healthy,2
+Cherry___Healthy,Tomato___Late Blight,1
+Apple___Healthy,Potato___Late Blight,1
+Cherry___Healthy,Potato___Healthy,1
+Cherry___Healthy,Strawberry___Healthy,1
+Apple___Cedar Apple Rust,Potato___Late Blight,1
+Apple___Apple Scab,Apple___Cedar Apple Rust,1
+Apple___Apple Scab,Grape___Healthy,1
+Apple___Apple Scab,Potato___Early Blight,1
+Apple___Apple Scab,Pepper___Healthy,1
+Apple___Apple Scab,Peach___Healthy,1
+Apple___Black Rot,Apple___Healthy,1
+Apple___Black Rot,Tomato___Bacterial Spot,1
+Cherry___Healthy,Apple___Healthy,1
+Apple___Cedar Apple Rust,Potato___Early Blight,1
+Apple___Cedar Apple Rust,Grape___Black Rot,1
+Apple___Cedar Apple Rust,Corn___Northern Leaf Blight,1
+Apple___Black Rot,Tomato___Healthy,1
+Apple___Black Rot,Tomato___Late Blight,1
+Apple___Cedar Apple Rust,Strawberry___Healthy,1
+Apple___Healthy,Pepper___Healthy,1
+Cherry___Powdery Mildew,Tomato___Bacterial Spot,1
+Cherry___Powdery Mildew,Apple___Apple Scab,1
+Cherry___Powdery Mildew,Apple___Healthy,1
+Cherry___Powdery Mildew,Peach___Bacterial Spot,1
+Peach___Healthy,Pepper___Healthy,1
+Peach___Healthy,Peach___Bacterial Spot,1
+Pepper___Bacterial Spot,Peach___Bacterial Spot,1
+Pepper___Bacterial Spot,Apple___Black Rot,1
+Peach___Bacterial Spot,Tomato___Late Blight,1
+Peach___Bacterial Spot,Tomato___Early Blight,1
+Cherry___Powdery Mildew,Tomato___Late Blight,1
+Corn___Common Rust,Corn___Northern Leaf Blight,1
+Corn___Healthy,Corn___Gray Leaf Spot,1
+Grape___Healthy,Grape___Black Rot,1
+Grape___Healthy,Strawberry___Healthy,1
+Peach___Bacterial Spot,Peach___Healthy,1
+Potato___Early Blight,Pepper___Bacterial Spot,1
+Pepper___Healthy,Tomato___Late Blight,1
+Pepper___Healthy,Tomato___Healthy,1
+Pepper___Bacterial Spot,Tomato___Healthy,1
+Potato___Late Blight,Tomato___Early Blight,1
+Potato___Late Blight,Apple___Black Rot,1
+Potato___Early Blight,Tomato___Late Blight,1
+Strawberry___Leaf Scorch,Grape___Black Rot,1
+Strawberry___Leaf Scorch,Tomato___Healthy,1
+Strawberry___Leaf Scorch,Tomato___Early Blight,1
+Strawberry___Leaf Scorch,Grape___Leaf Blight,1
+Tomato___Early Blight,Corn___Northern Leaf Blight,1
+Tomato___Bacterial Spot,Apple___Cedar Apple Rust,1
+Tomato___Early Blight,Grape___Leaf Blight,1
+Tomato___Bacterial Spot,Grape___Black Rot,1
+Tomato___Bacterial Spot,Pepper___Healthy,1

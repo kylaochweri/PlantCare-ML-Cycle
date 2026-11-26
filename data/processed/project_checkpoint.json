@@ -1,0 +1,17 @@
+{
+    "project": "PlantCare ML Cycle",
+    "stage": "CNN architecture completed",
+    "image_size": [
+        256,
+        256
+    ],
+    "batch_size": 32,
+    "num_classes": 27,
+    "architecture": "plant_disease_cnn",
+    "total_parameters": 114139,
+    "dataset": {
+        "train_images": 49984,
+        "validation_images": 12494,
+        "classes": 27
+    }
+}

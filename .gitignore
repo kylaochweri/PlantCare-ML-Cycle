@@ -1,0 +1,38 @@
+# Dataset files
+data/raw/
+data/train/
+data/valid/
+data/test/
+
+# Credentials and secrets
+.env
+.env.*
+kaggle.json
+**/kaggle.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+
+# Jupyter and Colab
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# IDE settings
+.vscode/
+.idea/

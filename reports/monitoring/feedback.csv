@@ -1,0 +1,3 @@
+prediction_id,actual_class,is_correct,timestamp
+055a8203-31fa-49c5-b763-235ba164220f,Apple___Apple Scab,True,2026-11-26T01:52:55.843231+00:00
+8289773d-c235-4ecd-8e1c-017b8968d98e,Apple___Apple Scab,True,2026-11-26T09:40:06.329552+00:00
