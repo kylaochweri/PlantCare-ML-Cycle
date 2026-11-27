@@ -6,9 +6,10 @@ import plotly.express as px
 import json
 from pathlib import Path
 from datetime import datetime
+import os
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-API_URL = "http://127.0.0.1:8000"
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
 MONITORING_DIR = PROJECT_DIR / "reports" / "monitoring"
 PREDICTIONS_FILE = MONITORING_DIR / "predictions.csv"

@@ -1,0 +1,35 @@
+﻿services:
+  api:
+    build: .
+    command: uvicorn api:app --app-dir /app/api --host 0.0.0.0 --port 8000
+    environment:
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./models:/app/models
+      - ./reports/monitoring:/app/reports/monitoring
+      - ./data/incoming_training:/app/data/incoming_training
+    restart: unless-stopped
+
+  load-balancer:
+    image: haproxy:3.0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    command: streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+    environment:
+      API_URL: http://load-balancer:8000
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./models:/app/models
+      - ./reports/monitoring:/app/reports/monitoring
+    depends_on:
+      - load-balancer
+    restart: unless-stopped
