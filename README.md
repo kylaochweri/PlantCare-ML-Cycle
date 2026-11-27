@@ -1,61 +1,95 @@
-# PlantCare ML Cycle 
-
-An end-to-end machine learning application for detecting plant diseases from leaf images. The project combines image classification, model evaluation, a FastAPI prediction service, monitoring, user feedback and retraining management.
+# PlantCare ML Cycle
+### An End-to-End Plant Disease Detection and Machine Learning Monitoring System
 
 ## 1. Project Overview
 
-PlantCare ML Cycle uses a deep learning model to classify plant leaf images into 27 disease and healthy-plant categories across 9 crops.
+PlantCare ML Cycle is an image-based machine learning application designed to identify plant diseases from leaf images.
 
-The system allows users to:
-- Upload a plant leaf image and receive a disease prediction.
-- View prediction confidence and the top three predicted classes.
-- Submit feedback on prediction correctness.
-- Monitor API health and prediction statistics.
-- Visualise prediction patterns and confidence distributions.
-- Monitor model performance and check whether retraining is recommended.
+The project implements an end-to-end machine learning workflow, covering dataset acquisition, image preprocessing, model development, evaluation, prediction through a Python API, monitoring through an interactive dashboard, and model retraining.
 
-## 2. Technology Stack
+The system uses a MobileNetV2-based image classification model to classify plant leaves into 27 disease and healthy-plant categories across nine crops.
+
+## 2. Project Objectives
+
+The main objectives are to:
+
+- Acquire and preprocess a plant disease image dataset.
+- Develop and evaluate an image classification model.
+- Provide predictions through a Python REST API.
+- Monitor model health and prediction activity.
+- Collect user feedback on predictions.
+- Implement a retraining workflow to support model updates.
+- Containerize the application using Docker.
+- Evaluate API performance through load testing.
+
+## 3. Technologies Used
 
 | Component | Technology |
 |---|---|
 | Programming language | Python |
-| Machine learning | TensorFlow / Keras |
+| Development environment | Google Colab |
+| Deep learning framework | TensorFlow / Keras |
 | Model architecture | MobileNetV2 |
-| Image processing | Pillow, NumPy |
+| Image processing | PIL, TensorFlow |
 | API | FastAPI |
 | Dashboard | Streamlit |
-| Visualisation | Plotly |
-| Data processing | Pandas |
-| Development environment | Google Colab |
+| API communication | HTTP / REST |
+| Containerization | Docker |
+| Container orchestration | Docker Compose |
+| Load testing | Locust |
+| Version control | Git and GitHub |
+| Dataset | Kaggle |
 
-## 3. Model and Dataset
+## 4. Dataset
 
-**Dataset:** [Plant Disease Detection Dataset – Kaggle](https://www.kaggle.com/datasets/mgmitesh/plant-disease-detection-dataset)
+The project uses the Plant Disease Detection Dataset from Kaggle:
 
-The dataset contains images organised into training, validation and test splits:
+**Dataset:** `mgmitesh/plant-disease-detection-dataset`
 
-- Training: 49,984 images
-- Validation: 12,494 images
-- Test: 39 images
-- Number of crops: 9
-- Number of classes: 27
+**License:** CC BY 4.0
 
-The dataset is distributed under the Creative Commons Attribution 4.0 (CC BY 4.0) licence. Refer to the original dataset page for attribution and usage details.
+The dataset contains images from nine crop categories and 27 classification classes.
 
-### Model Architecture
+### Dataset distribution
 
-The selected model uses MobileNetV2 pretrained on ImageNet as its feature extraction backbone.
+| Dataset split | Number of images |
+|---|---:|
+| Training | 49,984 |
+| Validation | 12,494 |
+| Testing | 39 |
+| **Total** | **62,517** |
 
-The architecture includes:
-- MobileNetV2 feature extraction.
-- Image augmentation.
-- Global Average Pooling.
-- Dropout regularisation.
-- A Dense softmax classification layer with 27 outputs.
+The dataset includes the following crops:
 
-Input images are resized to 256 × 256 pixels and processed as RGB images.
+- Apple
+- Cherry
+- Corn
+- Grape
+- Peach
+- Pepper
+- Potato
+- Strawberry
+- Tomato
 
-### Validation Results
+The raw dataset is not included in this GitHub repository because of its large size. Users should obtain it from Kaggle and place it in the appropriate project data directory.
+
+## 5. Model Development and Evaluation
+
+The project explored a baseline CNN model and a MobileNetV2-based model.
+
+MobileNetV2 was selected for the final disease classification system.
+
+### Model specifications
+
+- Architecture: MobileNetV2
+- Input image dimensions: 256 × 256 pixels
+- Input channels: RGB
+- Number of output classes: 27
+- Model file: `best_plantcare_mobilenetv2.keras`
+
+### Evaluation results
+
+The final MobileNetV2 model achieved the following validation results:
 
 | Metric | Result |
 |---|---:|
@@ -63,67 +97,199 @@ Input images are resized to 256 × 256 pixels and processed as RGB images.
 | Validation loss | 0.1184 |
 | Macro F1-score | 0.9614 |
 | Weighted F1-score | 0.9611 |
-| Model parameters | 2,292,571 |
-| Model size | Approximately 9.58 MB |
 
-The selected MobileNetV2 model improved validation accuracy by 36.93 percentage points compared with the baseline CNN, which achieved 59.19%.
+The baseline CNN achieved approximately 59.19% validation accuracy.
 
-**Evaluation note:** The test split contains only 39 images. The reported performance metrics above are validation results, not test-set results.
+These results demonstrate the improvement obtained using the MobileNetV2 architecture.
 
-## 4. System Architecture
+## 6. System Architecture
 
-The project follows this workflow:
+The application consists of three main components:
 
-1. **Data acquisition:** Obtain the plant disease image dataset.
-2. **Preprocessing:** Organise image manifests, resize images and prepare training and validation datasets.
-3. **Model development:** Train and evaluate the baseline CNN and MobileNetV2 models.
-4. **Model selection:** Save the best-performing MobileNetV2 checkpoint.
-5. **Prediction API:** Serve image predictions through FastAPI.
-6. **Monitoring:** Record predictions, confidence scores and feedback.
-7. **Retraining management:** Evaluate labelled prediction feedback against predefined performance criteria.
-8. **Dashboard:** Display system status, predictions, analytics and retraining eligibility.
+1. **Machine Learning Model:** Processes uploaded plant leaf images and predicts their classification.
+2. **FastAPI Backend:** Provides prediction, feedback, monitoring, and retraining endpoints.
+3. **Streamlit Dashboard:** Provides a user interface for interacting with the application and viewing monitoring information.
 
-## 5. API Endpoints
+Docker and Docker Compose are used to run the application components in containers. HAProxy provides a load-balancing entry point for the API.
 
-The FastAPI application provides the following endpoints:
+### Application workflow
 
-| Method | Endpoint | Purpose |
+1. A user uploads a plant leaf image through the dashboard.
+2. The dashboard sends the image to the FastAPI prediction endpoint.
+3. The API preprocesses the image and passes it to the trained model.
+4. The model predicts the plant disease class and confidence score.
+5. The API returns the prediction result.
+6. Prediction information is recorded for monitoring and analysis.
+7. Users can submit feedback on prediction correctness.
+
+## 7. Application Features
+
+### Image Prediction
+
+Users can upload an individual plant leaf image and receive:
+
+- Predicted disease or healthy classification.
+- Prediction confidence score.
+- Prediction ID.
+- Top prediction results.
+
+### System Monitoring
+
+The dashboard provides monitoring information, including API health, model availability, prediction activity, and performance metrics.
+
+### Data Visualization
+
+The dashboard includes visualizations such as:
+
+- Distribution of predicted plant diseases.
+- Prediction confidence distribution.
+- Recent prediction activity.
+
+### User Feedback
+
+Users can submit feedback indicating whether a prediction was correct. Feedback is recorded for monitoring and potential future model improvement.
+
+### Model Retraining
+
+The project includes a retraining workflow designed to support model updates using newly uploaded training data.
+
+The workflow includes:
+
+- Training data upload endpoint.
+- Retraining eligibility checks.
+- Candidate model training.
+- Candidate model evaluation.
+- Model acceptance checks.
+- Model backup and replacement.
+
+A retraining experiment was performed using a sample of 540 images, with up to 20 images per class.
+
+The experiment achieved:
+
+| Metric | Result |
+|---|---:|
+| Baseline accuracy | 99.07% |
+| Candidate accuracy | 99.07% |
+| Training epochs | 2 |
+
+The candidate model was accepted under the configured acceptance criteria.
+
+The retraining experiment demonstrates the workflow, but the sample was drawn from the original training dataset and should not be interpreted as independent real-world performance validation.
+
+**Note:** The bulk-upload workflow is implemented, but its end-to-end operation still requires further verification.
+
+## 8. API Endpoints
+
+The FastAPI backend exposes the following endpoints:
+
+| Endpoint | Method | Purpose |
 |---|---|---|
-| GET | `/health` | Check API and model status |
-| POST | `/predict` | Predict plant disease from an uploaded image |
-| POST | `/feedback` | Submit actual-class feedback |
-| GET | `/metrics` | Retrieve prediction and monitoring metrics |
-| GET | `/retrain-check` | Evaluate retraining eligibility |
-| POST | `/retrain` | Queue an eligible retraining request |
+| `/health` | GET | Checks API and model health |
+| `/predict` | POST | Accepts an image and returns a prediction |
+| `/feedback` | POST | Records prediction feedback |
+| `/metrics` | GET | Returns monitoring metrics |
+| `/retrain-check` | GET | Checks retraining eligibility |
+| `/retrain` | POST | Initiates model retraining |
+| `/retraining/upload` | POST | Accepts retraining data |
+| `/retraining/run` | POST | Runs the retraining workflow |
 
-### Retraining Management
+Interactive API documentation is available through FastAPI's Swagger UI at:
 
-The retraining eligibility policy uses two conditions:
+`http://localhost:8000/docs`
 
-- At least 20 labelled predictions must be collected.
-- Monitored accuracy must fall below 90% before retraining is recommended.
+## 9. Docker Deployment
 
-When insufficient feedback is available, the system prevents a retraining request.
+The project includes Docker configuration files:
 
-The API records eligible retraining requests in a monitoring log. Actual model training and deployment are performed separately through the development workflow; queuing a request does not automatically replace the deployed model.
+- `Dockerfile`
+- `docker-compose.yml`
+- `.dockerignore`
+- `haproxy.cfg`
 
-## 6. Dashboard
+The application was built and tested locally using Docker Desktop and Docker Compose.
 
-The Streamlit dashboard provides:
+### Running the application
 
-- API and model health monitoring.
-- Image upload and disease prediction.
-- Top-three prediction results.
-- Prediction feedback submission.
-- Prediction distribution visualisation.
-- Confidence distribution visualisation.
-- Recent prediction history.
-- Retraining eligibility and request management.
+Clone the repository:
 
-## 7. Project Structure
+```bash
+git clone https://github.com/kylaochweri/PlantCare-ML-Cycle.git
+```
+
+Navigate into the project:
+
+```bash
+cd PlantCare-ML-Cycle
+```
+
+Ensure that the trained model is available at:
 
 ```text
-PlantCare_ML_Cycle/
+models/checkpoints/best_plantcare_mobilenetv2.keras
+```
+
+Ensure the required application dependencies and model files are available, then build and start the containers:
+
+```bash
+docker compose up --build -d
+```
+
+Check the running containers:
+
+```bash
+docker compose ps
+```
+
+### Accessing the application
+
+- Streamlit Dashboard: `http://localhost:8501`
+- API: `http://localhost:8000`
+- API Documentation: `http://localhost:8000/docs`
+
+To stop the application:
+
+```bash
+docker compose down
+```
+
+**Deployment status:** Local Docker deployment was successfully tested. Public cloud deployment was not completed.
+
+## 10. Load Testing with Locust
+
+Locust was used to evaluate the API's performance under simulated concurrent user activity.
+
+### Test configuration
+
+| Parameter | Value |
+|---|---:|
+| Simulated users | 5 |
+| Spawn rate | 1 user per second |
+| Test duration | 30 seconds |
+| Total requests | 84 |
+
+### Load testing results
+
+| Metric | Result |
+|---|---:|
+| Total requests | 84 |
+| Failed requests | 0 |
+| Average response time | 164.5 ms |
+| Median response time | 130 ms |
+| Minimum response time | 90.9 ms |
+| Maximum response time | 1,090.3 ms |
+| 95th percentile | 310 ms |
+| Throughput | 2.945 requests/second |
+
+The test recorded zero failed requests during the measured run.
+
+**Limitation:** The performance evaluation covered one load configuration. A comparison involving one, two, and three API containers was not completed.
+
+## 11. Project Structure
+
+The repository is organized into the following main directories and files:
+
+```text
+PlantCare-ML-Cycle/
 │
 ├── api/
 │   └── api.py
@@ -131,84 +297,58 @@ PlantCare_ML_Cycle/
 ├── dashboard/
 │   └── app.py
 │
-├── data/
-│   └── processed/
-│       └── class_mapping.json
+├── notebook/
+│   └── PlantCare_ML_Cycle.ipynb
 │
 ├── models/
 │   └── checkpoints/
 │       └── best_plantcare_mobilenetv2.keras
 │
-├── notebooks/
-│   └── PlantCare_ML_Cycle.ipynb
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── incoming_training/
 │
 ├── reports/
-│   ├── mobilenetv2/
-│   │   ├── classification_report.csv
-│   │   ├── confusion_matrix.csv
-│   │   ├── evaluation_metrics.json
-│   │   ├── misclassification_analysis.csv
-│   │   └── model_metadata.json
-│   │
 │   └── monitoring/
 │
-├── README.md
+├── Dockerfile
+├── docker-compose.yml
+├── haproxy.cfg
+├── .dockerignore
+├── .gitignore
 ├── requirements.txt
-└── .gitignore
+└── README.md
 ```
 
-## 8. Installation and Execution
+Some generated files and local dataset files are excluded from version control.
 
-### Clone the repository
+## 12. Future Improvements
 
-```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd PlantCare_ML_Cycle
-```
+Potential future improvements include:
 
-### Install dependencies
+- Deploying the application to a public cloud platform.
+- Completing load testing across multiple API container configurations.
+- Improving bulk training-data upload and validation.
+- Integrating model explainability visualizations into the dashboard.
+- Evaluating the model using independent field images.
+- Expanding the dataset to include more crops and disease categories.
+- Improving automated model monitoring and retraining decisions.
 
-```bash
-pip install -r requirements.txt
-```
+## 13. Conclusion
 
-### Configure project files
+PlantCare ML Cycle demonstrates an end-to-end machine learning application for plant disease classification.
 
-Obtain the dataset from Kaggle and follow the data preparation instructions in the notebook.
+The project combines image preprocessing, deep learning, model evaluation, REST API development, interactive monitoring, user feedback, retraining workflows, Docker containerization, and performance testing.
 
-Ensure that the trained model checkpoint and class mapping file are available in their expected project directories.
+The final system demonstrates how a trained image classification model can be integrated into an application with monitoring and model lifecycle management capabilities.
 
-### Start the FastAPI service
+## 14. Author
 
-From the project root:
+**Kyla Nyaboke Ochweri**
 
-```bash
-cd api
-uvicorn api:app --host 127.0.0.1 --port 8000
-```
+GitHub: [@kylaochweri](https://github.com/kylaochweri)
 
-### Start the Streamlit dashboard
-
-In a separate terminal, from the project root:
-
-```bash
-streamlit run dashboard/app.py
-```
-
-The dashboard communicates with the API at `http://127.0.0.1:8000`.
-
-## 9. Limitations and Future Improvements
-
-- The test split is relatively small and should be expanded for stronger independent evaluation.
-- Monitored accuracy depends on users submitting feedback.
-- The retraining workflow currently queues requests rather than automatically training and deploying a new model.
-- Future improvements could include automated retraining pipelines, model versioning, deployment automation and expanded crop coverage.
-
-## 10. Author
-
-Developed as an end-to-end machine learning lifecycle project.
-
-**Project:** PlantCare ML Cycle  
-**Primary model:** MobileNetV2  
-**Application:** FastAPI and Streamlit
+Project Repository: [PlantCare ML Cycle](https://github.com/kylaochweri/PlantCare-ML-Cycle)
+Youtube unlisted demo link; https://youtu.be/UAy1C9kHaf8
 
